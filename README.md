@@ -1,7 +1,8 @@
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffarcasterxyz%2Fminiapp-img)
 
 This repo demonstrates how to generate dynamic images using Next + Vercel. It's
-easy to fork, modify, and deploy.
+easy to fork, modify, and deploy. And in most cases the free plan should be
+sufficient.
 
 Note, you can deploy and use this as a standalone service with the sole purpose
 of generating images for your mini app.
@@ -57,15 +58,6 @@ fonts: [{
 }]
 ```
 
-## Using SVG Images
-
-1. Save SVG files in `/static/` directory
-2. Use them in your JSX:
-```tsx
-<img src="https://your-domain.com/your-svg.svg" height={34} width={34} />
-```
-Note: SVGs must be hosted externally as Next.js OG images don't support local file imports.
-
 
 ## Image Loading Strategies
 
@@ -98,9 +90,81 @@ const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
 - **External CDN**: Large images, multiple variants, or shared across projects
 
 
+## Using SVG Images
+
+You can use SVGs in two ways:
+
+### Inline SVGs (Recommended)
+
+Define SVG elements directly in your JSX:
+
+```tsx
+const svg = (
+  <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" fill="none">
+    {/* SVG paths and elements */}
+  </svg>
+);
+
+// Use it in your component:
+<div>{svg}</div>
+```
+
+### External SVGs
+For hosted SVG files:
+
+```tsx
+<img src="https://your-domain.com/your-svg.svg" height={34} width={34} />
+```
+
+
 ## Cache Control
 
-Set cache headers to improve performance:
+Cache headers improve performance and reduce costs. Choose based on your content:
+
+### 🔒 Static Images
+
+If the image at a particular URL will never change:
+
+```tsx
+'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable'
+```
+
+**Result:** Cached for 1 year, never revalidates  
+**Cost:** Generate once, serve forever
+**Example:** stats about a completed football match
+
+### 🔄 Dynamic Data
+
+If the image at a particular URL should periodically change:
+
+```tsx
+'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=86400'
+```
+
+**Result:** Browser 5min → CDN 5m → Stale OK for 1 day  
+**Cost:** ~24 generations/day per unique URL
+**Examples:** stats about an in-progress football match
+
+### ⚡ Real-time Updates
+
+You almost certainly don't want to do this since it will be slow and expensive;
+and when developing you can use the developer tools in your browser to disable
+caching to bypass the cache. But for demonstration purposes if you did want to
+always dynamically generate the image:
+
+```tsx
+'Cache-Control': 'no-cache, no-store, must-revalidate'
+```
+**Result:** Always fresh  
+**Cost:** Every request generates (expensive and slow!)
+
+Just hope you don't go viral with this setting or you'll be in for an unpleasant
+bill!
+
+### Implementation
+
+Set cache headers in your ImageResponse:
+
 ```tsx
 return new ImageResponse(
   (<div>...</div>),
@@ -114,10 +178,10 @@ return new ImageResponse(
 );
 ```
 
-### Cache Options:
-- `max-age=3600`: Browser cache for 1 hour
-- `s-maxage=86400`: CDN cache for 24 hours
-- `max-age=31536000`: Maximum 1 year cache
+### Cache Options
+
+- `max-age=3600`: Browser cache time of 1 hour
+- `s-maxage=86400`: CDN cache of 24 hours
 - `stale-while-revalidate`: Serve stale content while updating
 - `no-cache`: Force revalidation on every request
 - `immutable`: Never revalidate (for versioned URLs)
