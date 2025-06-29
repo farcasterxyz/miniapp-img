@@ -119,7 +119,7 @@ export async function GET(request: Request) {
            * changing value like the number of mints on an NFT) but be mindful
            * of performance and billing considerations.
            */
-          'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate',
+          'Cache-Control': 'public, max-age=10, stale-while-revalidate',
         },
         fonts: [
           {
