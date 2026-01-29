@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "frog": "^0.18.3",
-    "next": "^14",
+    "next": "^16",
     "react": "^18",
     "react-dom": "^18"
   },
